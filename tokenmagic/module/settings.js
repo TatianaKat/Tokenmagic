@@ -2,8 +2,8 @@ import { presets as defaultPresets, PresetsLibrary } from "../fx/presets/default
 import { DataVersion } from "../migration/migration.js";
 import { TokenMagic } from './tokenmagic.js';
 import { AutoTemplateDND5E, dnd5eTemplates } from "./autoTemplate/dnd5e.js";
-import { defaultTemplateOnHover } from "./proto/DefaultTemplateOnHover.js";
 import { defaultOpacity, emptyPreset } from './constants.js';
+import { measuredTemplateRefreshHotfix } from "./proto/PlaceableObjectProto.js";
 
 const Magic = TokenMagic();
 
@@ -168,7 +168,26 @@ export class TokenMagicSettings extends FormApplication {
 	}
 
 	static configureDefaultTemplateOnHover(enabled = false) {
-		defaultTemplateOnHover.configure(enabled);
+		libWrapper.unregister('tokenmagic', 'MeasuredTemplate.prototype.refresh', false);
+		if (!enabled) {
+			// TODO: replace the below with just the above unregister, when upstream bug is fixed.
+			libWrapper.register('tokenmagic', 'MeasuredTemplate.prototype.refresh', function (wrapped, ...args) {
+				measuredTemplateRefreshHotfix(this, wrapped, ...args);
+			}, 'MIXED');
+			return;
+		}
+		libWrapper.register('tokenmagic', 'MeasuredTemplate.prototype.refresh', function (wrapped, ...args) {
+			if (game.settings.get('tokenmagic', 'defaultTemplateOnHover')) {
+				const hl = canvas.grid.getHighlightLayer(`Template.${this.id}`);
+				if (this.texture && this.texture !== '') {
+					hl.renderable = this._hover;
+				} else {
+					hl.renderable = true;
+				}
+			}
+			// TODO: replace the below with a direct call to the wrapped method when upstream bug is fixed.
+			return measuredTemplateRefreshHotfix(this, wrapped, ...args);
+		}, 'MIXED');
 	}
 
 	/** @override */

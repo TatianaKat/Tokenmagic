@@ -52,16 +52,12 @@ PlaceableObject.prototype._TMFXgetSprite = function () {
     switch (this.constructor.embeddedName) {
         case PlaceableType.TOKEN:
             return this.icon;
-            break;
         case PlaceableType.TILE:
             return this.tile.img;
-            break;
         case PlaceableType.TEMPLATE:
             return this.template;
-            break;
         case PlaceableType.DRAWING:
             return this.drawing || this.img;
-            break;
         default:
             return null;
     }
@@ -90,22 +86,18 @@ PlaceableObject.prototype._TMFXcheckSprite = function () {
         case PlaceableType.TOKEN:
             return (this.hasOwnProperty("icon")
                 && !(this.icon == null));
-            break;
         case PlaceableType.TILE:
             return (this.hasOwnProperty("tile")
                 && this.tile.hasOwnProperty("img")
                 && !(this.tile.img == null));
-            break;
         case PlaceableType.TEMPLATE:
             return (this.hasOwnProperty("template")
                 && !(this.template == null));
-            break;
         case PlaceableType.DRAWING:
             return (this.hasOwnProperty("drawing")
                 && !(this.drawing == null))
                 || (this.hasOwnProperty("img")
                     && !(this.img == null));
-            break;
         default:
             return null;
     }
@@ -183,9 +175,9 @@ PlaceableObject.prototype._TMFXgetPlaceableType = function () {
     return PlaceableType.NOT_SUPPORTED;
 }
 
-MeasuredTemplate.prototype.update = (function () {
-    const cachedMTU = MeasuredTemplate.prototype.update;
-    return async function (data, options) {
+export function enableMeasuredTemplatePrototypeUpdate() {
+    libWrapper.register('tokenmagic', 'MeasuredTemplate.prototype.update', function (wrapped, ...args) {
+        const data = args[0];
         const hasTexture = data.hasOwnProperty("texture");
         const hasPresetData = data.hasOwnProperty("tmfxPreset");
         if (hasPresetData && data.tmfxPreset !== emptyPreset) {
@@ -200,18 +192,14 @@ MeasuredTemplate.prototype.update = (function () {
             data.texture = '';
         }
 
-        return await cachedMTU.apply(this, [data, options]);
-    };
-})();
+        return wrapped(...args);
+    }, 'WRAPPER');
+}
 
-export function enableMeasuredTemplatePrototypeRefresh() {
-    MeasuredTemplate.prototype.refresh = (function () {
-        const cachedMTR = MeasuredTemplate.prototype.refresh;
-        return function () {
-            if (this.template && !this.template._destroyed) {
-                return cachedMTR.apply(this);
-            }
-            return this;
-        };
-    })();
+export function measuredTemplateRefreshHotfix(tpl, wrapped, ...args) {
+    // Temporary fix for upstream issue rendering destroyed templates
+    if (tpl.template && !tpl.template._destroyed) {
+        return wrapped(...args);
+    }
+    return tpl;
 }

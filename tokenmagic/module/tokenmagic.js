@@ -38,7 +38,7 @@ import { Anime } from "../fx/Anime.js";
 import { allPresets, PresetsLibrary } from "../fx/presets/defaultpresets.js";
 import { tmfxDataMigration } from "../migration/migration.js";
 import { emptyPreset } from './constants.js';
-import { enableMeasuredTemplatePrototypeRefresh } from "./proto/PlaceableObjectProto.js";
+import { enableMeasuredTemplatePrototypeUpdate } from "./proto/PlaceableObjectProto.js";
 import "./proto/PlaceableObjectProto.js";
 
 /*
@@ -1313,32 +1313,28 @@ function initSocketListener() {
 };
 
 function initFurnaceDrawingsException() {
-    if (isFurnaceDrawingsActive) {
-        DrawingConfig.prototype.refresh = (function () {
-            const cachedDCR = DrawingConfig.prototype.refresh;
-            return async function (html) {
-
-                // Clear animations and filters if needed
-                let tmfxUpdate = false;
-                if (this.object.data.hasOwnProperty("flags")
-                    && this.object.data.flags.hasOwnProperty("tokenmagic")
-                    && this.object.data.flags.tokenmagic.hasOwnProperty("filters")) {
-                    tmfxUpdate = true;
-                    Anime.removeAnimation(this.object.id);
-                    Magic._clearImgFiltersByPlaceable(this.object);
-                }
-
-                // Furnace function apply (updating data and full redraw : destruction/reconstruction)
-                cachedDCR.apply(this, arguments);
-
-                // Reapply the filters if needed
-                if (tmfxUpdate) {
-                    Magic._singleLoadFilters(this.object);
-                }
-
-            };
-        })();
+    if (!isFurnaceDrawingsActive()) {
+        return;
     }
+    libWrapper.register('tokenmagic', 'DrawingConfig.prototype.refresh', function (wrapped, ...args) {
+        // Clear animations and filters if needed
+        let tmfxUpdate = false;
+        if (this.object.data.hasOwnProperty("flags")
+            && this.object.data.flags.hasOwnProperty("tokenmagic")
+            && this.object.data.flags.tokenmagic.hasOwnProperty("filters")) {
+            tmfxUpdate = true;
+            Anime.removeAnimation(this.object.id);
+            Magic._clearImgFiltersByPlaceable(this.object);
+        }
+
+        // Furnace function apply (updating data and full redraw : destruction/reconstruction)
+        wrapped(...args);
+
+        // Reapply the filters if needed
+        if (tmfxUpdate) {
+            Magic._singleLoadFilters(this.object);
+        }
+    }, 'WRAPPER');
 }
 
 async function requestLoadFilters(placeable, startTimeout = 0) {
@@ -1467,7 +1463,7 @@ Hooks.on("ready", () => {
     tmfxDataMigration();
     initSocketListener();
     initFurnaceDrawingsException();
-    enableMeasuredTemplatePrototypeRefresh();
+    enableMeasuredTemplatePrototypeUpdate();
     window.TokenMagic = Magic;
     Hooks.on("renderMeasuredTemplateConfig", onMeasuredTemplateConfig);
 });

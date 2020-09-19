@@ -88,8 +88,13 @@
     },
     {
       "lang": "pt-BR",
-      "name": "Português (Brasil)",
+      "name": "Portuguï¿½s (Brasil)",
       "path": "lang/pt-BR.json"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "lib-wrapper"
     }
   ],
   "socket": true,

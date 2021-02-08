@@ -21,8 +21,39 @@
                 }
             }
         ],
+        
         "library": "tmfx-main"
     },
+    {
+        "name": "poisoned-smoke",
+        "params": [
+            {    
+    "filterType": "field",
+    "filterId": "mySmokeField",
+    "shieldType": 3,
+    "gridPadding": 1,
+    "color": 0x60CC70,
+    "time": 0,
+    "blend": 0,
+    "intensity": 0.9,
+    "lightAlpha": 1,
+    "lightSize": 0.7,
+    "scale": 1,
+    "radius": 1,
+    "chromatic": false,
+    "zOrder": 512,
+    "animated": {
+      "time": { 
+        "active": true, 
+        "speed": 0.0015, 
+        "animType": "move" 
+      }
+    }
+}
+],
+        
+        "library": "tmfx-main"
+    },        
     {
         "name": "adjustment",
         "params": [

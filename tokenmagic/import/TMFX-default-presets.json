@@ -29,7 +29,7 @@
         "params": [
             {    
     "filterType": "field",
-    "filterId": "mySmokeField",
+    "filterId": "poisoned-field",
     "shieldType": 3,
     "gridPadding": 1,
     "color": 96204112,
